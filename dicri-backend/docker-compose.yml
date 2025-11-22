@@ -4,7 +4,7 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=YourStrong!Passw0rd
+      - SA_PASSWORD=123456
     ports:
       - "1433:1433"
     healthcheck:
@@ -24,7 +24,7 @@ services:
       - DB_SERVER=sqlserver
       - DB_PORT=1433
       - DB_USER=sa
-      - DB_PASSWORD=YourStrong!Passw0rd
+      - DB_PASSWORD=123456
       - DB_DATABASE=DICRI
       - DB_ENCRYPT=false
       - DB_TRUST_SERVER_CERTIFICATE=true
