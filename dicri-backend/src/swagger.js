@@ -1,0 +1,73 @@
+const swaggerJSDoc = require('swagger-jsdoc');
+
+const options = {
+  definition: {
+    openapi: '3.0.3',
+    info: {
+      title: 'DICRI API',
+      version: '1.0.0',
+      description: 'API REST para gestión de evidencias DICRI (MP Guatemala)'
+    },
+    servers: [
+      { url: 'http://localhost:3000', description: 'Local' }
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        }
+      },
+      schemas: {
+        Permiso: {
+          type: 'object',
+          properties: {
+            permisoId: { type: 'integer', example: 1 },
+            nombre: { type: 'string', example: 'EXPEDIENTES_CREAR' }
+          }
+        },
+        Rol: {
+          type: 'object',
+          properties: {
+            rolId: { type: 'integer', example: 1 },
+            nombre: { type: 'string', example: 'COORDINADOR' }
+          }
+        },
+        Usuario: {
+          type: 'object',
+          properties: {
+            usuarioId: { type: 'integer', example: 10 },
+            nombre: { type: 'string', example: 'Juan Pérez' },
+            email: { type: 'string', example: 'juan.perez@dicri.gob.gt' },
+            activo: { type: 'boolean', example: true },
+            fechaCreacion: { type: 'string', format: 'date-time', example: '2025-01-01T12:00:00Z' }
+          }
+        },
+        Error: {
+          type: 'object',
+          properties: {
+            message: { type: 'string', example: 'Mensaje de error' }
+          }
+        }
+      }
+    },
+    tags: [
+      { name: 'Auth', description: 'Autenticación y control de acceso' },
+      { name: 'Expedientes', description: 'Gestión de expedientes DICRI' },
+      { name: 'Indicios', description: 'Gestión de indicios dentro de un expediente' },
+      { name: 'Reportes', description: 'Reportes y estadísticas' },
+      { name: 'Permisos', description: 'CRUD de permisos' },
+      { name: 'Roles', description: 'CRUD de roles y asignación de permisos' },
+      { name: 'Usuarios', description: 'CRUD de usuarios y asignación de roles' }
+    ]
+  },
+  apis: [
+    './src/routes/*.js',
+    './src/controllers/*.js'
+  ]
+};
+
+const swaggerSpec = swaggerJSDoc(options);
+
+module.exports = { swaggerSpec };

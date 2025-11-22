@@ -1,0 +1,45 @@
+{
+  "name": "dicri-backend",
+  "version": "1.0.0",
+  "description": "API RESTful para gestión de evidencias DICRI (MP Guatemala) con Express, SQL Server y Swagger",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest --runInBand",
+    "lint": "echo 'no linter configured'"
+  },
+  "keywords": [
+    "express",
+    "sqlserver",
+    "swagger",
+    "dicri",
+    "mp-guatemala"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2",
+    "mssql": "^10.0.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.7",
+    "supertest": "^7.1.1"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/swagger.js"
+    ]
+  }
+}
