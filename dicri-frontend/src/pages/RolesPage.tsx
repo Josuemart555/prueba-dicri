@@ -86,6 +86,21 @@ export default function RolesPage() {
         }
     };
 
+    const handleDelete = async (rol: Rol) => {
+        const confirmar = window.confirm(`¿Estás seguro de eliminar el rol "${(rol as any).Nombre ?? ''}"?`);
+        if (!confirmar) return;
+        setError(null);
+        try {
+            if (selected?.RolId === rol.RolId) {
+                setSelected(null);
+            }
+            await rolesService.remove(rol.RolId);
+            await load();
+        } catch (e: any) {
+            setError(e.message);
+        }
+    };
+
     return (
         <div className="container py-3">
             <div className="d-flex justify-content-between align-items-center mb-3">
@@ -187,7 +202,7 @@ export default function RolesPage() {
                             <tr>
                                 <th style={{width: 100}}>ID</th>
                                 <th>Nombre</th>
-                                <th style={{width: 140}} className="text-end">Acciones</th>
+                                <th style={{width: 200}} className="text-end">Acciones</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -196,9 +211,14 @@ export default function RolesPage() {
                                     <td>{r.RolId}</td>
                                     <td>{r.Nombre}</td>
                                     <td className="text-end">
-                                        <button className="btn btn-sm btn-outline-primary" onClick={() => openEdit(r)}>
-                                            Editar
-                                        </button>
+                                        <div className="d-inline-flex gap-2">
+                                            <button className="btn btn-sm btn-outline-primary" onClick={() => openEdit(r)}>
+                                                Editar
+                                            </button>
+                                            <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(r)}>
+                                                Eliminar
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
