@@ -1,73 +1,81 @@
-# React + TypeScript + Vite
+# DICRI Frontend (React + Vite + TypeScript)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend para la gestión de expedientes, indicios, reportes, usuarios, roles y permisos de la DICRI.
 
-Currently, two official plugins are available:
+## Requisitos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node 18+
+- Backend corriendo en http://localhost:3000 (o configurar VITE_API_URL)
 
-## React Compiler
+## Variables de entorno
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Crea un archivo `.env` (o `.env.local`) en la raíz del proyecto:
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+VITE_API_URL=http://localhost:3000
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Scripts
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- `npm run dev` — Inicia el servidor de desarrollo
+- `npm run build` — Compila para producción
+- `npm run preview` — Sirve el build localmente
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Estructura de carpetas
+
 ```
+src/
+  components/
+    AppLayout.tsx
+    layout.css
+  config/
+    env.ts
+  context/
+    AuthContext.tsx
+  pages/
+    LoginPage.tsx
+    DashboardPage.tsx
+    ExpedientesPage.tsx
+    IndiciosPage.tsx
+    ReportesPage.tsx
+    PermisosPage.tsx
+    RolesPage.tsx
+    UsuariosPage.tsx
+  routes/
+    ProtectedRoute.tsx
+  services/
+    api.ts
+    authService.ts
+    expedientesService.ts
+    indiciosService.ts
+    reportesService.ts
+    permisosService.ts
+    rolesService.ts
+    usuariosService.ts
+  types/
+    index.ts
+  utils/
+    storage.ts
+  App.tsx
+  main.tsx
+  index.css
+```
+
+## Navegación y permisos
+
+- Ruta pública: `/login`
+- Rutas protegidas: `/` (dashboard), `/expedientes`, `/indicios`, `/reportes`, `/usuarios`, `/roles`, `/permisos`
+- Se usa JWT almacenado en localStorage y se inyecta en Authorization Bearer automáticamente.
+
+## Servicios API
+
+Se consumen los endpoints descritos en el OpenAPI que compartiste. El archivo `src/services/api.ts` configura axios con:
+
+- baseURL = `VITE_API_URL`
+- interceptor de Authorization con el token
+- manejo básico de errores
+
+## Notas
+
+- `authService.me()` es un placeholder si tu backend no expone `/api/auth/me`. Ajústalo fácilmente para usar el endpoint correcto de tu backend.
+- Las páginas son versiones minimalistas para validar el flujo completo y pueden refinarse (UI/UX, validaciones, paginación, etc.).
