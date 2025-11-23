@@ -14,7 +14,6 @@ export default function UsuariosPage() {
         activo: true
     });
     const [error, setError] = useState<string | null>(null);
-    // UI: mostrar/ocultar paneles y modo edición
     const [showCreate, setShowCreate] = useState<boolean>(false);
     const [editing, setEditing] = useState<boolean>(false);
     const [editForm, setEditForm] = useState<{ nombre: string; email: string; activo: boolean }>({
@@ -23,13 +22,11 @@ export default function UsuariosPage() {
         activo: true
     });
 
-    // Utilidad: obtener ID del usuario aunque venga con distinta nomenclatura desde el backend
     const getUserId = (u: any | null | undefined): number | undefined => {
         if (!u) return undefined;
         return u.UsuarioId ?? u.usuarioId ?? u.id ?? u.Id;
     };
 
-    // Utilidad: obtener ID del rol aunque venga con distinta nomenclatura
     const getRoleId = (r: any | null | undefined): number | undefined => {
         if (!r) return undefined;
         return r.rolId ?? r.RolId ?? r.id ?? r.Id;
@@ -57,7 +54,6 @@ export default function UsuariosPage() {
 
     useEffect(() => {
         load();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const onCreate = async (e: FormEvent) => {
@@ -72,7 +68,7 @@ export default function UsuariosPage() {
             });
             setForm({nombre: '', email: '', password: '', activo: true});
             await load();
-            setShowCreate(false); // ocultar panel de creación al guardar
+            setShowCreate(false);
         } catch (e: any) {
             setError(e.message);
         }
@@ -81,7 +77,8 @@ export default function UsuariosPage() {
     const toggleRole = async (rolId: number) => {
         const id = getUserId(selected);
         if (!selected || !id) return;
-        const has = (selected.roles || []).some((r) => r.rolId === rolId);
+        // Usar el helper getRoleId para comparar correctamente independientemente del casing/propiedad
+        const has = (selected.roles || []).some((r) => getRoleId(r) === rolId);
         if (has) {
             await usuariosService.removeRole(id, rolId);
         } else {
@@ -92,7 +89,6 @@ export default function UsuariosPage() {
 
     const onUpdateGeneral = () => {
         if (!selected) return;
-        // activar modo edición cargando valores actuales
         setEditForm({
             nombre: (selected as any).nombre ?? (selected as any).Nombre ?? '',
             email: (selected as any).email ?? (selected as any).Email ?? '',
@@ -102,7 +98,6 @@ export default function UsuariosPage() {
     };
 
     const startEdit = async (u: Usuario) => {
-        // asegurar que seleccionamos y cargamos roles del usuario a editar
         const id = getUserId(u);
         if (!id) {
             setError('Usuario sin identificador válido');
@@ -126,7 +121,7 @@ export default function UsuariosPage() {
             await usuariosService.update(id, {nombre: editForm.nombre, email: editForm.email, activo: editForm.activo});
             await load();
             await refreshSelected(id);
-            setEditing(false); // ocultar panel de edición al guardar
+            setEditing(false);
         } catch (e: any) {
             setError(e.message);
         }
@@ -150,7 +145,6 @@ export default function UsuariosPage() {
         alert('Contraseña actualizada');
     };
 
-    // Al cambiar el seleccionado, salir de modo edición
     useEffect(() => {
         setEditing(false);
     }, [selectedId]);
@@ -263,8 +257,8 @@ export default function UsuariosPage() {
                                     {roles.map((r, idx) => {
                                         const roleId = getRoleId(r);
                                         const checked = (selected.roles || []).some((ur) => getRoleId(ur) === roleId);
-                                        const htmlId = `rol-${roleId ?? (r as any).nombre ?? 'no-id'}-${idx}`;
-                                        const keyVal = roleId ?? `name-${(r as any).nombre ?? 'unnamed'}-${idx}`;
+                                        const htmlId = `rol-${roleId ?? (r as any).Nombre ?? 'no-id'}-${idx}`;
+                                        const keyVal = roleId ?? `name-${(r as any).Nombre ?? 'unnamed'}-${idx}`;
                                         return (
                                             <div className="form-check form-check-inline" key={keyVal}>
                                                 <input
@@ -277,7 +271,7 @@ export default function UsuariosPage() {
                                                     }}
                                                 />
                                                 <label className="form-check-label"
-                                                       htmlFor={htmlId}>{(r as any).nombre ?? ''}</label>
+                                                       htmlFor={htmlId}>{(r as any).Nombre ?? ''}</label>
                                             </div>
                                         );
                                     })}

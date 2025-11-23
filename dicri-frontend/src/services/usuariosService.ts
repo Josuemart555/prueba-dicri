@@ -10,7 +10,8 @@ export const usuariosService = {
     const { data } = await api.get(`/api/usuarios/${id}`);
     return data as Usuario;
   },
-  async create(payload: { email: string; password: string; activo?: boolean }) {
+
+  async create(payload: { nombre: string; email: string; password: string; activo?: boolean }) {
     const { data } = await api.post('/api/usuarios', payload);
     return data as Usuario;
   },
