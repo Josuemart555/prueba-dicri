@@ -317,16 +317,40 @@ export default function UsuariosPage() {
                                                 <td>{activo ? <span className="badge text-bg-success">Activo</span> :
                                                     <span className="badge text-bg-secondary">Inactivo</span>}</td>
                                                 <td className="text-end">
-                                                    <button
-                                                        className="btn btn-primary btn-sm"
-                                                        onClick={async (e) => {
-                                                            e.stopPropagation();
-                                                            await startEdit(u);
-                                                        }}
-                                                        title="Editar usuario"
-                                                    >
-                                                        Editar
-                                                    </button>
+                                                    <div className="d-inline-flex gap-2">
+                                                        <button
+                                                            className="btn btn-primary btn-sm"
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                await startEdit(u);
+                                                            }}
+                                                            title="Editar usuario"
+                                                        >
+                                                            Editar
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-danger btn-sm"
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                const id = getUserId(u);
+                                                                if (!id) return;
+                                                                if (!confirm('¿Eliminar usuario?')) return;
+                                                                try {
+                                                                    await usuariosService.remove(id);
+                                                                    await load();
+                                                                    if (selectedId === id) {
+                                                                        setSelected(null);
+                                                                        setEditing(false);
+                                                                    }
+                                                                } catch (err: any) {
+                                                                    setError(err?.message ?? 'Error al eliminar usuario');
+                                                                }
+                                                            }}
+                                                            title="Eliminar usuario"
+                                                        >
+                                                            Eliminar
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );
