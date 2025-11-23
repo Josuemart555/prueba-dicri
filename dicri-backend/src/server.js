@@ -33,11 +33,11 @@ app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 const PORT = process.env.PORT || 3000;
-// Evitar levantar el servidor durante pruebas (Jest establece NODE_ENV=test)
+
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     console.log(`DICRI backend escuchando en puerto ${PORT}`);
   });
 }
 
-module.exports = app; // exportado para pruebas
+module.exports = app;

@@ -1,38 +1,49 @@
-version: '3.9'
+
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=123456
+      - SA_PASSWORD=Admin1234!
+      - MSSQL_PID=Developer
     ports:
       - "1433:1433"
-    healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P $$SA_PASSWORD -Q 'select 1' || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
     volumes:
       - mssql-data:/var/opt/mssql
+      - ./scripts/sql:/sql
+    command: >
+      bash -c "
+      /opt/mssql/bin/sqlservr &
+      sleep 40 &&
+      /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Admin1234! -C -Q 'CREATE DATABASE DICRI' &&
+      /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Admin1234! -d DICRI -C -i /sql/schema.sql &&
+      /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Admin1234! -d DICRI -C -i /sql/procedures.sql &&
+      wait
+      "
 
   api:
     build: .
     environment:
       - PORT=3000
       - NODE_ENV=development
-      - JWT_SECRET=super_secret_jwt_key_change_me
+      - JWT_SECRET=f05f19728dbec1492a4e72946942d91d4783e09e7581346fa8166de0721ed193
       - DB_SERVER=sqlserver
       - DB_PORT=1433
       - DB_USER=sa
-      - DB_PASSWORD=123456
+      - DB_PASSWORD=Admin1234!
       - DB_DATABASE=DICRI
       - DB_ENCRYPT=false
       - DB_TRUST_SERVER_CERTIFICATE=true
     ports:
       - "3000:3000"
     depends_on:
-      sqlserver:
-        condition: service_healthy
+      - sqlserver
+    restart: on-failure
+    volumes:
+      - ./src:/app/src
+      - ./package.json:/app/package.json
+      - ./package-lock.json:/app/package-lock.json
+    command: npm run dev
 
 volumes:
   mssql-data:

@@ -109,10 +109,10 @@ INSERT INTO dbo.Permisos (Nombre) VALUES ('EXPEDIENTES_CREAR'), ('EXPEDIENTES_AP
 
 -- Usuario administrador/coordinador demo: contraseña se debe reemplazar por hash real en entorno
 INSERT INTO dbo.Usuarios (Nombre, Email, PasswordHash)
-VALUES ('Coordinador Demo', 'coordinador@dicri.gob.gt', '$2b$10$demoHashReemplace');
+VALUES ('Coordinador Demo', 'coordinador@dicri.gob.gt', '$2b$04$l9iEXgbGQkxr.MTc9y4AIOriGf6RDdEDnuWN.lmQzg9zY4kBJjq82');
 
 INSERT INTO dbo.Usuarios (Nombre, Email, PasswordHash)
-VALUES ('Tecnico Demo', 'tecnico@dicri.gob.gt', '$2b$10$demoHashReemplace');
+VALUES ('Tecnico Demo', 'tecnico@dicri.gob.gt', '$2b$04$l9iEXgbGQkxr.MTc9y4AIOriGf6RDdEDnuWN.lmQzg9zY4kBJjq82');
 
 -- Asignaciones de roles y permisos (ejemplo)
 INSERT INTO dbo.UsuarioRol (UsuarioId, RolId)
