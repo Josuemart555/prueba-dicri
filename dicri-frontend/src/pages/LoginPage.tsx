@@ -27,24 +27,49 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ maxWidth: 360, margin: '10vh auto', padding: 24, border: '1px solid #ccc', borderRadius: 8 }}>
-      <h2>Ingreso DICRI</h2>
-      <form onSubmit={onSubmit}>
-        <div>
-          <label>Email</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: '100%' }} />
+    <div className="container min-vh-100 d-flex align-items-center justify-content-center">
+      <div className="card shadow-sm" style={{ maxWidth: 420, width: '100%' }}>
+        <div className="card-body">
+          <h2 className="card-title h4 mb-4 text-center">Ingreso DICRI</h2>
+
+          {error && (
+            <div className="alert alert-danger" role="alert">{error}</div>
+          )}
+
+          <form onSubmit={onSubmit} noValidate>
+            <div className="mb-3">
+              <label className="form-label">Email</label>
+              <input
+                type="email"
+                className="form-control"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Contraseña</label>
+              <input
+                type="password"
+                className="form-control"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+              />
+            </div>
+
+            <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+              {loading && (
+                <span className="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+              )}
+              {loading ? 'Ingresando...' : 'Entrar'}
+            </button>
+          </form>
         </div>
-        <div style={{ marginTop: 12 }}>
-          <label>Contraseña</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ width: '100%' }} />
-        </div>
-        {error && (
-          <div style={{ color: 'red', marginTop: 12 }}>{error}</div>
-        )}
-        <button type="submit" disabled={loading} style={{ marginTop: 16, width: '100%' }}>
-          {loading ? 'Ingresando...' : 'Entrar'}
-        </button>
-      </form>
+      </div>
     </div>
   );
 }
