@@ -16,6 +16,21 @@ const bcrypt = require('bcrypt');
  *     summary: Listar usuarios (sin información sensible)
  *     tags: [Usuarios]
  *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: Lista de usuarios
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Usuario'
+ *       500:
+ *         description: Error del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 async function list(req, res) {
   try {
@@ -40,6 +55,25 @@ async function list(req, res) {
  *         name: id
  *         required: true
  *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Usuario encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Usuario'
+ *       404:
+ *         description: Usuario no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 async function getById(req, res) {
   try {
@@ -76,6 +110,25 @@ async function getById(req, res) {
  *               email: { type: string }
  *               password: { type: string }
  *               activo: { type: boolean }
+ *     responses:
+ *       201:
+ *         description: Usuario creado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Usuario'
+ *       400:
+ *         description: Datos inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 async function create(req, res) {
   try {
@@ -121,6 +174,25 @@ async function create(req, res) {
  *               nombre: { type: string }
  *               email: { type: string }
  *               activo: { type: boolean }
+ *     responses:
+ *       200:
+ *         description: Usuario actualizado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Usuario'
+ *       400:
+ *         description: Datos inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 async function update(req, res) {
   try {
@@ -166,6 +238,21 @@ async function update(req, res) {
  *             required: [password]
  *             properties:
  *               password: { type: string }
+ *     responses:
+ *       204:
+ *         description: Contraseña actualizada (sin contenido)
+ *       400:
+ *         description: Datos inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 async function updatePassword(req, res) {
   try {
@@ -198,6 +285,15 @@ async function updatePassword(req, res) {
  *         name: id
  *         required: true
  *         schema: { type: integer }
+ *     responses:
+ *       204:
+ *         description: Usuario eliminado (sin contenido)
+ *       500:
+ *         description: Error del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 async function remove(req, res) {
   try {
@@ -225,6 +321,21 @@ async function remove(req, res) {
  *         name: id
  *         required: true
  *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Lista de roles del usuario
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Rol'
+ *       500:
+ *         description: Error del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 async function getRoles(req, res) {
   try {
@@ -261,6 +372,21 @@ async function getRoles(req, res) {
  *             required: [rolId]
  *             properties:
  *               rolId: { type: integer }
+ *     responses:
+ *       204:
+ *         description: Rol asignado (sin contenido)
+ *       400:
+ *         description: Datos inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 async function assignRol(req, res) {
   try {
@@ -295,6 +421,15 @@ async function assignRol(req, res) {
  *         name: rolId
  *         required: true
  *         schema: { type: integer }
+ *     responses:
+ *       204:
+ *         description: Rol removido (sin contenido)
+ *       500:
+ *         description: Error del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 async function removeRol(req, res) {
   try {
