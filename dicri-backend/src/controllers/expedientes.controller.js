@@ -165,9 +165,164 @@ async function rechazarExpediente(req, res) {
   }
 }
 
+/**
+ * @swagger
+ * /api/expedientes/{id}/estado:
+ *   post:
+ *     summary: Actualizar estado del expediente
+ *     description: Permite establecer el estado de un expediente. Si el estado es RECHAZADO, se requiere justificacion.
+ *     tags: [Expedientes]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [estado]
+ *             properties:
+ *               estado:
+ *                 type: string
+ *                 example: PARA REVISAR
+ *               justificacion:
+ *                 type: string
+ *                 description: Requerida cuando estado = RECHAZADO
+ *     responses:
+ *       200:
+ *         description: Estado actualizado
+ *       400:
+ *         description: Petición inválida
+ */
+async function actualizarEstadoExpediente(req, res) {
+  try {
+    const expedienteId = Number(req.params.id);
+    const usuarioId = req.user?.sub;
+    const { estado, justificacion = null } = req.body || {};
+
+    if (!expedienteId) return res.status(400).json({ message: 'id inválido' });
+    if (!estado || typeof estado !== 'string' || !estado.trim()) {
+      return res.status(400).json({ message: 'estado es requerido' });
+    }
+
+    const nuevoEstado = estado.trim().toUpperCase();
+    if (nuevoEstado === 'RECHAZADO') {
+      const justText = (justificacion ?? '').toString().trim();
+      if (!justText) return res.status(400).json({ message: 'justificacion requerida para RECHAZADO' });
+    }
+
+    await execStoredProcedure('Expedientes_UpdateEstado', [
+      { name: 'ExpedienteId', type: sql.Int, value: expedienteId },
+      { name: 'NuevoEstado', type: sql.VarChar(20), value: nuevoEstado },
+      { name: 'UsuarioId', type: sql.Int, value: usuarioId },
+      { name: 'Justificacion', type: sql.VarChar(sql.MAX), value: justificacion ?? null }
+    ]);
+
+    res.json({ message: 'Estado actualizado', estado: nuevoEstado });
+  } catch (e) {
+    console.error('actualizarEstadoExpediente', e);
+    res.status(500).json({ message: 'Error al actualizar estado del expediente' });
+  }
+}
+
+/**
+ * @swagger
+ * /api/expedientes/rechazados:
+ *   get:
+ *     summary: Listar expedientes rechazados
+ *     description: Retorna los expedientes cuyo estado es RECHAZADO. Solo lectura.
+ *     tags: [Expedientes]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: fechaInicio
+ *         schema: { type: string, format: date }
+ *       - in: query
+ *         name: fechaFin
+ *         schema: { type: string, format: date }
+ *     responses:
+ *       200:
+ *         description: Lista de expedientes rechazados
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/ExpedienteRechazado'
+ *       500:
+ *         description: Error del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+async function listarExpedientesRechazados(req, res) {
+  const { fechaInicio = null, fechaFin = null } = req.query || {};
+  try {
+    const result = await execStoredProcedure('Expedientes_Rechazados_List', [
+      { name: 'FechaInicio', type: sql.Date, value: fechaInicio ? new Date(fechaInicio) : null },
+      { name: 'FechaFin', type: sql.Date, value: fechaFin ? new Date(fechaFin) : null }
+    ]);
+    res.json(result.recordset || []);
+  } catch (e) {
+    console.error('listarExpedientesRechazados', e);
+    res.status(500).json({ message: 'Error al listar expedientes rechazados' });
+  }
+}
+
+/**
+ * @swagger
+ * /api/expedientes/{id}/rechazos:
+ *   get:
+ *     summary: Obtener historial de rechazos por expediente
+ *     description: Lista de rechazos registrados para un expediente específico. Solo lectura.
+ *     tags: [Expedientes]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Lista de rechazos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Rechazo'
+ *       500:
+ *         description: Error del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+async function obtenerRechazosPorExpediente(req, res) {
+  const expedienteId = Number(req.params.id);
+  if (!expedienteId) return res.status(400).json({ message: 'id inválido' });
+  try {
+    const result = await execStoredProcedure('Rechazos_GetByExpedienteId', [
+      { name: 'ExpedienteId', type: sql.Int, value: expedienteId }
+    ]);
+    res.json(result.recordset || []);
+  } catch (e) {
+    console.error('obtenerRechazosPorExpediente', e);
+    res.status(500).json({ message: 'Error al obtener rechazos del expediente' });
+  }
+}
+
 module.exports = {
   crearExpediente,
   listarExpedientes,
   aprobarExpediente,
-  rechazarExpediente
+  rechazarExpediente,
+  actualizarEstadoExpediente,
+  listarExpedientesRechazados,
+  obtenerRechazosPorExpediente
 };

@@ -359,6 +359,84 @@ END
 GO
 
 -- =============================================
+-- Indicios_GetById
+-- =============================================
+IF OBJECT_ID('dbo.Indicios_GetById','P') IS NOT NULL DROP PROCEDURE dbo.Indicios_GetById;
+GO
+CREATE PROCEDURE dbo.Indicios_GetById
+  @IndicioId INT
+AS
+BEGIN
+  SET NOCOUNT ON;
+  SELECT IndicioId, ExpedienteId, Objeto, Descripcion, Color, Tamano, Peso, Ubicacion, TecnicoId, FechaRegistro
+  FROM dbo.Indicios
+  WHERE IndicioId = @IndicioId;
+END
+GO
+
+-- =============================================
+-- Indicios_GetByExpedienteId
+-- =============================================
+IF OBJECT_ID('dbo.Indicios_GetByExpedienteId','P') IS NOT NULL DROP PROCEDURE dbo.Indicios_GetByExpedienteId;
+GO
+CREATE PROCEDURE dbo.Indicios_GetByExpedienteId
+  @ExpedienteId INT
+AS
+BEGIN
+  SET NOCOUNT ON;
+  SELECT IndicioId, ExpedienteId, Objeto, Descripcion, Color, Tamano, Peso, Ubicacion, TecnicoId, FechaRegistro
+  FROM dbo.Indicios
+  WHERE ExpedienteId = @ExpedienteId
+  ORDER BY FechaRegistro DESC, IndicioId DESC;
+END
+GO
+
+-- =============================================
+-- Indicios_Update
+-- =============================================
+IF OBJECT_ID('dbo.Indicios_Update','P') IS NOT NULL DROP PROCEDURE dbo.Indicios_Update;
+GO
+CREATE PROCEDURE dbo.Indicios_Update
+  @IndicioId INT,
+  @Objeto NVARCHAR(200) = NULL,
+  @Descripcion NVARCHAR(MAX) = NULL,
+  @Color NVARCHAR(50) = NULL,
+  @Tamano NVARCHAR(50) = NULL,
+  @Peso DECIMAL(18,2) = NULL,
+  @Ubicacion NVARCHAR(200) = NULL
+AS
+BEGIN
+  SET NOCOUNT ON;
+  UPDATE dbo.Indicios
+  SET Objeto = COALESCE(@Objeto, Objeto),
+      Descripcion = COALESCE(@Descripcion, Descripcion),
+      Color = COALESCE(@Color, Color),
+      Tamano = COALESCE(@Tamano, Tamano),
+      Peso = COALESCE(@Peso, Peso),
+      Ubicacion = COALESCE(@Ubicacion, Ubicacion)
+  WHERE IndicioId = @IndicioId;
+
+  SELECT IndicioId, ExpedienteId, Objeto, Descripcion, Color, Tamano, Peso, Ubicacion, TecnicoId, FechaRegistro
+  FROM dbo.Indicios
+  WHERE IndicioId = @IndicioId;
+END
+GO
+
+-- =============================================
+-- Indicios_Delete
+-- =============================================
+IF OBJECT_ID('dbo.Indicios_Delete','P') IS NOT NULL DROP PROCEDURE dbo.Indicios_Delete;
+GO
+CREATE PROCEDURE dbo.Indicios_Delete
+  @IndicioId INT
+AS
+BEGIN
+  SET NOCOUNT ON;
+  DELETE FROM dbo.Indicios WHERE IndicioId = @IndicioId;
+END
+GO
+
+-- =============================================
 -- Expedientes_UpdateEstado (aprobar/rechazar)
 -- =============================================
 IF OBJECT_ID('dbo.Expedientes_UpdateEstado','P') IS NOT NULL DROP PROCEDURE dbo.Expedientes_UpdateEstado;
@@ -426,10 +504,129 @@ CREATE PROCEDURE dbo.Reportes_Resumen
 AS
 BEGIN
   SET NOCOUNT ON;
+  -- 1) Resumen por estado
   SELECT e.Estado, COUNT(*) AS Total
   FROM dbo.Expedientes e
   WHERE (@FechaInicio IS NULL OR CAST(e.FechaRegistro AS DATE) >= @FechaInicio)
     AND (@FechaFin IS NULL OR CAST(e.FechaRegistro AS DATE) <= @FechaFin)
   GROUP BY e.Estado;
+
+  -- 2) Detalle de expedientes APROBADOS (incluye último dato de aprobación)
+  SELECT 
+    e.ExpedienteId,
+    e.Numero,
+    e.Descripcion,
+    e.FechaRegistro,
+    e.Estado,
+    e.TecnicoId,
+    uTec.Nombre AS Tecnico,
+    hAprob.FechaCambio AS AprobacionFecha,
+    hAprob.UsuarioId AS AprobacionUsuarioId,
+    uApr.Nombre AS AprobacionUsuario
+  FROM dbo.Expedientes e
+  JOIN dbo.Usuarios uTec ON uTec.UsuarioId = e.TecnicoId
+  OUTER APPLY (
+    SELECT TOP 1 eh.FechaCambio, eh.UsuarioId
+    FROM dbo.ExpedienteEstadoHistorial eh
+    WHERE eh.ExpedienteId = e.ExpedienteId AND eh.EstadoNuevo = 'APROBADO'
+    ORDER BY eh.FechaCambio DESC, eh.HistorialId DESC
+  ) hAprob
+  LEFT JOIN dbo.Usuarios uApr ON uApr.UsuarioId = hAprob.UsuarioId
+  WHERE e.Estado = 'APROBADO'
+    AND (@FechaInicio IS NULL OR CAST(e.FechaRegistro AS DATE) >= @FechaInicio)
+    AND (@FechaFin IS NULL OR CAST(e.FechaRegistro AS DATE) <= @FechaFin)
+  ORDER BY e.FechaRegistro DESC, e.ExpedienteId DESC;
+
+  -- 3) Detalle de expedientes RECHAZADOS (incluye último rechazo)
+  SELECT 
+    e.ExpedienteId,
+    e.Numero,
+    e.Descripcion,
+    e.FechaRegistro,
+    e.Estado,
+    e.TecnicoId,
+    uTec.Nombre AS Tecnico,
+    rLast.Justificacion AS UltimoRechazoJustificacion,
+    rLast.Fecha AS UltimoRechazoFecha,
+    rLast.UsuarioId AS UltimoRechazoUsuarioId,
+    uRec.Nombre AS UltimoRechazoUsuario
+  FROM dbo.Expedientes e
+  JOIN dbo.Usuarios uTec ON uTec.UsuarioId = e.TecnicoId
+  OUTER APPLY (
+    SELECT TOP 1 r.RechazoId, r.Justificacion, r.Fecha, r.UsuarioId
+    FROM dbo.Rechazos r
+    WHERE r.ExpedienteId = e.ExpedienteId
+    ORDER BY r.Fecha DESC, r.RechazoId DESC
+  ) rLast
+  LEFT JOIN dbo.Usuarios uRec ON uRec.UsuarioId = rLast.UsuarioId
+  WHERE e.Estado = 'RECHAZADO'
+    AND (@FechaInicio IS NULL OR CAST(e.FechaRegistro AS DATE) >= @FechaInicio)
+    AND (@FechaFin IS NULL OR CAST(e.FechaRegistro AS DATE) <= @FechaFin)
+  ORDER BY e.FechaRegistro DESC, e.ExpedienteId DESC;
+END
+GO
+
+-- =============================================
+-- Expedientes_Rechazados_List (solo lectura)
+-- Devuelve expedientes con estado RECHAZADO y datos del último rechazo
+-- =============================================
+IF OBJECT_ID('dbo.Expedientes_Rechazados_List','P') IS NOT NULL DROP PROCEDURE dbo.Expedientes_Rechazados_List;
+GO
+CREATE PROCEDURE dbo.Expedientes_Rechazados_List
+  @FechaInicio DATE = NULL,
+  @FechaFin DATE = NULL
+AS
+BEGIN
+  SET NOCOUNT ON;
+  SELECT 
+    e.ExpedienteId,
+    e.Numero,
+    e.Descripcion,
+    e.FechaRegistro,
+    e.Estado,
+    e.TecnicoId,
+    u.Nombre AS Tecnico,
+    lr.Justificacion AS UltimoRechazoJustificacion,
+    lr.Fecha AS UltimoRechazoFecha,
+    lr.UsuarioId AS UltimoRechazoUsuarioId,
+    u2.Nombre AS UltimoRechazoUsuario
+  FROM dbo.Expedientes e
+  JOIN dbo.Usuarios u ON u.UsuarioId = e.TecnicoId
+  OUTER APPLY (
+    SELECT TOP 1 r.RechazoId, r.Justificacion, r.Fecha, r.UsuarioId
+    FROM dbo.Rechazos r
+    WHERE r.ExpedienteId = e.ExpedienteId
+    ORDER BY r.Fecha DESC, r.RechazoId DESC
+  ) lr
+  LEFT JOIN dbo.Usuarios u2 ON u2.UsuarioId = lr.UsuarioId
+  WHERE e.Estado = 'RECHAZADO'
+    AND (@FechaInicio IS NULL OR CAST(e.FechaRegistro AS DATE) >= @FechaInicio)
+    AND (@FechaFin IS NULL OR CAST(e.FechaRegistro AS DATE) <= @FechaFin)
+  ORDER BY e.FechaRegistro DESC, e.ExpedienteId DESC;
+END
+GO
+
+-- =============================================
+-- Rechazos_GetByExpedienteId (solo lectura)
+-- Lista de rechazos registrados para un expediente
+-- =============================================
+IF OBJECT_ID('dbo.Rechazos_GetByExpedienteId','P') IS NOT NULL DROP PROCEDURE dbo.Rechazos_GetByExpedienteId;
+GO
+CREATE PROCEDURE dbo.Rechazos_GetByExpedienteId
+  @ExpedienteId INT
+AS
+BEGIN
+  SET NOCOUNT ON;
+  SELECT 
+    r.RechazoId,
+    r.ExpedienteId,
+    r.UsuarioId,
+    u.Nombre AS Usuario,
+    r.Justificacion,
+    r.Fecha
+  FROM dbo.Rechazos r
+  JOIN dbo.Usuarios u ON u.UsuarioId = r.UsuarioId
+  WHERE r.ExpedienteId = @ExpedienteId
+  ORDER BY r.Fecha DESC, r.RechazoId DESC;
 END
 GO

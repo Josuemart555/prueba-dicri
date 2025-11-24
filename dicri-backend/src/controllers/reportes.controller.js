@@ -11,7 +11,7 @@ const { execStoredProcedure, sql } = require('../config/db');
  * @swagger
  * /api/reportes/resumen:
  *   get:
- *     summary: Resumen de registros, aprobaciones y rechazos
+ *     summary: Resumen y detalle de expedientes aprobados y rechazados
  *     tags: [Reportes]
  *     security: [{ bearerAuth: [] }]
  *     parameters:
@@ -23,7 +23,7 @@ const { execStoredProcedure, sql } = require('../config/db');
  *         schema: { type: string, format: date }
  *     responses:
  *       200:
- *         description: Resumen por estado
+ *         description: Objeto con resumen por estado y listas detalladas de aprobados y rechazados
  */
 async function resumen(req, res) {
   const { fechaInicio = null, fechaFin = null } = req.query;
@@ -32,7 +32,11 @@ async function resumen(req, res) {
       { name: 'FechaInicio', type: sql.Date, value: fechaInicio ? new Date(fechaInicio) : null },
       { name: 'FechaFin', type: sql.Date, value: fechaFin ? new Date(fechaFin) : null }
     ]);
-    res.json(result.recordset || []);
+    const recordsets = result.recordsets || [];
+    const resumen = recordsets[0] || [];
+    const aprobados = recordsets[1] || [];
+    const rechazados = recordsets[2] || [];
+    res.json({ resumen, aprobados, rechazados });
   } catch (e) {
     console.error('reportes.resumen', e);
     res.status(500).json({ message: 'Error al obtener reporte' });

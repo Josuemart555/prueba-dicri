@@ -20,6 +20,48 @@ const options = {
         }
       },
       schemas: {
+        Indicio: {
+          type: 'object',
+          properties: {
+            indicioId: { type: 'integer', example: 123 },
+            expedienteId: { type: 'integer', example: 45 },
+            objeto: { type: 'string', example: 'Teléfono celular' },
+            descripcion: { type: 'string', example: 'Dispositivo encontrado en la escena' },
+            color: { type: 'string', example: 'Negro' },
+            tamano: { type: 'string', example: '6 pulgadas' },
+            peso: { type: 'number', example: 0.18 },
+            ubicacion: { type: 'string', example: 'Cajón del escritorio' },
+            tecnicoId: { type: 'integer', example: 10 },
+            fechaRegistro: { type: 'string', format: 'date-time', example: '2025-01-01T12:00:00Z' }
+          }
+        },
+        Rechazo: {
+          type: 'object',
+          properties: {
+            rechazoId: { type: 'integer', example: 5 },
+            expedienteId: { type: 'integer', example: 45 },
+            usuarioId: { type: 'integer', example: 2 },
+            usuario: { type: 'string', example: 'Coordinador Demo' },
+            justificacion: { type: 'string', example: 'Falta documentación de soporte' },
+            fecha: { type: 'string', format: 'date-time', example: '2025-02-10T15:30:00Z' }
+          }
+        },
+        ExpedienteRechazado: {
+          type: 'object',
+          properties: {
+            expedienteId: { type: 'integer', example: 45 },
+            numero: { type: 'string', example: 'EXP-2025-0001' },
+            descripcion: { type: 'string', example: 'Expediente de prueba' },
+            fechaRegistro: { type: 'string', format: 'date-time', example: '2025-02-01T12:00:00Z' },
+            estado: { type: 'string', example: 'RECHAZADO' },
+            tecnicoId: { type: 'integer', example: 10 },
+            tecnico: { type: 'string', example: 'Tecnico Demo' },
+            ultimoRechazoJustificacion: { type: 'string', example: 'Información incompleta' },
+            ultimoRechazoFecha: { type: 'string', format: 'date-time', example: '2025-02-10T15:30:00Z' },
+            ultimoRechazoUsuarioId: { type: 'integer', example: 2 },
+            ultimoRechazoUsuario: { type: 'string', example: 'Coordinador Demo' }
+          }
+        },
         Permiso: {
           type: 'object',
           properties: {
