@@ -2,18 +2,28 @@ import {useEffect, useMemo, useState} from 'react';
 import type {FormEvent} from 'react';
 import {expedientesService} from '../services/expedientesService';
 import type {Expediente} from '../types';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function ExpedientesPage() {
     const [items, setItems] = useState<Expediente[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [filters, setFilters] = useState<{ estado?: string; fechaInicio?: string; fechaFin?: string }>({});
+    const navigate = useNavigate();
+    const { user } = useAuth();
 
     const [numero, setNumero] = useState('');
     const [descripcion, setDescripcion] = useState('');
     const [fechaRegistro, setFechaRegistro] = useState<string>(new Date().toISOString());
 
     const [showCreate, setShowCreate] = useState(false);
+
+    // Estado para modal de rechazo
+    const [showReject, setShowReject] = useState(false);
+    const [rejectId, setRejectId] = useState<number | undefined>(undefined);
+    const [rejectJust, setRejectJust] = useState('');
+    const [rejectLoading, setRejectLoading] = useState(false);
 
     const load = async () => {
         setLoading(true);
@@ -47,20 +57,43 @@ export default function ExpedientesPage() {
         }
     };
 
-    // Edición deshabilitada por requerimiento
-
     const aprobar = async (id?: number) => {
         if (!id) return;
         await expedientesService.aprobar(id);
         await load();
     };
 
-    const rechazar = async (id?: number) => {
+    const abrirRechazo = (id?: number) => {
         if (!id) return;
-        const just = prompt('Justificación del rechazo:');
-        if (!just) return;
-        await expedientesService.rechazar(id, just);
-        await load();
+        setRejectId(id);
+        setRejectJust('');
+        setShowReject(true);
+    };
+
+    const cancelarRechazo = () => {
+        setShowReject(false);
+        setRejectLoading(false);
+        setRejectJust('');
+        setRejectId(undefined);
+    };
+
+    const confirmarRechazo = async (e?: FormEvent) => {
+        if (e) e.preventDefault();
+        if (!rejectId) return;
+        if (!rejectJust.trim()) {
+            setError('La justificación es obligatoria para rechazar.');
+            return;
+        }
+        try {
+            setRejectLoading(true);
+            setError(null);
+            await expedientesService.rechazar(rejectId, rejectJust.trim());
+            cancelarRechazo();
+            await load();
+        } catch (e: any) {
+            setError(e?.message ?? 'Error al rechazar.');
+            setRejectLoading(false);
+        }
     };
 
     const fechaToInput = (iso?: string) => {
@@ -77,6 +110,18 @@ export default function ExpedientesPage() {
         {value: 'APROBADO', label: 'Aprobado'},
         {value: 'RECHAZADO', label: 'Rechazado'},
     ], []);
+
+    const permisosSet = useMemo(() => {
+        const directos = Array.isArray(user?.permissions) ? (user?.permissions as string[]) : [];
+        const porRoles = (user?.roles ?? [])
+            .flatMap((r: any) => (typeof r === 'string' ? [] : (r?.permisos ?? [])))
+            .map((p: any) => p?.nombre)
+            .filter(Boolean) as string[];
+        return new Set<string>([...directos, ...porRoles]);
+    }, [user]);
+
+    const canAprobar = permisosSet.has('EXPEDIENTES_APROBAR');
+    const canRechazar = permisosSet.has('EXPEDIENTES_RECHAZAR');
 
     return (
         <div className="container py-3">
@@ -182,28 +227,48 @@ export default function ExpedientesPage() {
                                     <th>Descripción</th>
                                     <th style={{width: 180}}>Fecha</th>
                                     <th style={{width: 140}}>Estado</th>
-                                    <th style={{width: 240}} className="text-end">Acciones</th>
+                                    <th style={{width: 340}} className="text-end">Acciones</th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 {items.map((x) => (
-                                    <tr key={x.ExpedienteId ?? x.Numero}>
-                                        <td className="fw-semibold">{x.Numero}</td>
-                                        <td>{x.Descripcion}</td>
-                                        <td>{x.FechaRegistro}</td>
+                                    <tr key={(x as any).ExpedienteId ?? (x as any).Numero ?? x.Numero}>
+                                        <td className="fw-semibold">{(x as any).Numero ?? (x as any).numero}</td>
+                                        <td>{(x as any).Descripcion ?? (x as any).descripcion}</td>
+                                        <td>{(x as any).FechaRegistro ?? (x as any).fechaRegistro}</td>
                                         <td>
                         <span
-                            className={`badge bg-${x.Estado === 'APROBADO' ? 'success' : x.Estado === 'RECHAZADO' ? 'danger' : x.Estado === 'EN_REVISION' ? 'warning text-dark' : 'secondary'}`}>
-                          {x.Estado}
+                            className={`badge bg-${((x as any).Estado ?? (x as any).Estado) === 'APROBADO' ? 'success' : ((x as any).Estado ?? (x as any).Estado) === 'RECHAZADO' ? 'danger' : ((x as any).Estado ?? (x as any).Estado) === 'EN_REVISION' ? 'warning text-dark' : 'secondary'}`}>
+                          {(x as any).Estado ?? (x as any).Estado}
                         </span>
                                         </td>
                                         <td className="text-end">
                                             <div className="btn-group" role="group">
-                                                <button className="btn btn-sm btn-outline-success"
-                                                        onClick={() => aprobar(x.ExpedienteId)}>Aprobar
-                                                </button>
-                                                <button className="btn btn-sm btn-outline-danger"
-                                                        onClick={() => rechazar(x.ExpedienteId)}>Rechazar
+                                                {canAprobar && (
+                                                    <button className="btn btn-sm btn-outline-success"
+                                                            onClick={() => aprobar((x as any).ExpedienteId ?? (x as any).id)}>Aprobar
+                                                    </button>
+                                                )}
+                                                {canRechazar && (
+                                                    <button className="btn btn-sm btn-outline-danger"
+                                                            onClick={() => abrirRechazo((x as any).ExpedienteId ?? (x as any).id)}>Rechazar
+                                                    </button>
+                                                )}
+                                                <button
+                                                    className="btn btn-sm btn-outline-primary"
+                                                    onClick={() => {
+                                                        const id = (x as any).ExpedienteId ?? (x as any).id;
+                                                        navigate(`/expedientes/${id}/indicios`, {
+                                                            state: {
+                                                                id,
+                                                                numero: (x as any).Numero ?? (x as any).numero,
+                                                                descripcion: (x as any).Descripcion ?? (x as any).descripcion,
+                                                                estado: (x as any).Estado ?? (x as any).estado,
+                                                            }
+                                                        });
+                                                    }}
+                                                >
+                                                    Indicios
                                                 </button>
                                             </div>
                                         </td>
@@ -220,6 +285,44 @@ export default function ExpedientesPage() {
                     )}
                 </div>
             </div>
+
+            {/* Modal de rechazo */}
+            {showReject && (
+                <div>
+                    <div className="modal fade show" style={{display: 'block'}} role="dialog" aria-modal="true">
+                        <div className="modal-dialog">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title">Rechazar expediente</h5>
+                                    <button type="button" className="btn-close" aria-label="Close" onClick={cancelarRechazo} disabled={rejectLoading}></button>
+                                </div>
+                                <form onSubmit={confirmarRechazo}>
+                                    <div className="modal-body">
+                                        <div className="mb-3">
+                                            <label className="form-label">Justificación del rechazo</label>
+                                            <textarea
+                                                className="form-control"
+                                                rows={4}
+                                                value={rejectJust}
+                                                onChange={(e) => setRejectJust(e.target.value)}
+                                                placeholder="Ingrese la justificación"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="modal-footer">
+                                        <button type="button" className="btn btn-secondary" onClick={cancelarRechazo} disabled={rejectLoading}>Cancelar</button>
+                                        <button type="submit" className="btn btn-danger" disabled={rejectLoading || !rejectJust.trim()}>
+                                            {rejectLoading ? 'Rechazando…' : 'Confirmar rechazo'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="modal-backdrop fade show" onClick={() => { if (!rejectLoading) cancelarRechazo(); }} />
+                </div>
+            )}
 
         </div>
     );

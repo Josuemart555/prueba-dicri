@@ -1,4 +1,5 @@
-import {type FormEvent, useEffect, useMemo, useState} from 'react';
+import type {FormEvent} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {rolesService} from '../services/rolesService';
 import {permisosService} from '../services/permisosService';
 import type {Permiso, Rol} from '../types';
@@ -51,21 +52,21 @@ export default function RolesPage() {
         }
     };
 
-    const togglePermiso = async (PermisoId: number) => {
+    const togglePermiso = async (permisoId: number) => {
         if (!selected) return;
-        if (selectedPermisos.has(PermisoId)) {
-            await rolesService.removePermiso(selected.RolId, PermisoId);
+        if (selectedPermisos.has(permisoId)) {
+            await rolesService.removePermiso(selected.rolId, permisoId);
         } else {
-            await rolesService.addPermiso(selected.RolId, PermisoId);
+            await rolesService.addPermiso(selected.rolId, permisoId);
         }
-        await refreshSelected(selected.RolId);
+        await refreshSelected(selected.rolId);
     };
 
     const openEdit = async (rol: Rol) => {
         setSelected(rol);
-        setEditNombre((rol as any).Nombre ?? (rol as any).Nombre ?? '');
+        setEditNombre(rol.nombre ?? '');
         try {
-            await refreshSelected(rol.RolId);
+            await refreshSelected(rol.rolId);
         } catch (e: any) {
             setError(e.message);
         }
@@ -77,9 +78,9 @@ export default function RolesPage() {
         if (!selected) return;
         setError(null);
         try {
-            await rolesService.update(selected.RolId, editNombre);
+            await rolesService.update(selected.rolId, editNombre);
             await load();
-            await refreshSelected(selected.RolId);
+            await refreshSelected(selected.rolId);
             setShowEdit(false);
         } catch (e: any) {
             setError(e.message);
@@ -87,14 +88,14 @@ export default function RolesPage() {
     };
 
     const handleDelete = async (rol: Rol) => {
-        const confirmar = window.confirm(`¿Estás seguro de eliminar el rol "${(rol as any).Nombre ?? ''}"?`);
+        const confirmar = window.confirm(`¿Estás seguro de eliminar el rol "${rol.nombre ?? ''}"?`);
         if (!confirmar) return;
         setError(null);
         try {
-            if (selected?.RolId === rol.RolId) {
+            if (selected?.rolId === rol.rolId) {
                 setSelected(null);
             }
-            await rolesService.remove(rol.RolId);
+            await rolesService.remove(rol.rolId);
             await load();
         } catch (e: any) {
             setError(e.message);
@@ -207,15 +208,17 @@ export default function RolesPage() {
                             </thead>
                             <tbody>
                             {roles.map((r) => (
-                                <tr key={r.RolId} className={selected?.RolId === r.RolId ? 'table-active' : ''}>
-                                    <td>{r.RolId}</td>
-                                    <td>{r.Nombre}</td>
+                                <tr key={r.rolId} className={selected?.rolId === r.rolId ? 'table-active' : ''}>
+                                    <td>{r.rolId}</td>
+                                    <td>{r.nombre}</td>
                                     <td className="text-end">
                                         <div className="d-inline-flex gap-2">
-                                            <button className="btn btn-sm btn-outline-primary" onClick={() => openEdit(r)}>
+                                            <button className="btn btn-sm btn-outline-primary"
+                                                    onClick={() => openEdit(r)}>
                                                 Editar
                                             </button>
-                                            <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(r)}>
+                                            <button className="btn btn-sm btn-outline-danger"
+                                                    onClick={() => handleDelete(r)}>
                                                 Eliminar
                                             </button>
                                         </div>

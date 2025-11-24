@@ -15,18 +15,27 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(storage.getToken());
-  const [user, setUser] = useState<Usuario | null>(null);
-  const [loading, setLoading] = useState<boolean>(!!token);
+  const [user, setUser] = useState<Usuario | null>(storage.getUser<Usuario>());
+  const [loading, setLoading] = useState<boolean>(!!token && !storage.getUser());
 
   useEffect(() => {
     let mounted = true;
     async function fetchMe() {
       if (!token) return;
+      // Si ya hay user en storage/state, no necesitamos pedirlo
+      if (storage.getUser()) {
+        setLoading(false);
+        return;
+      }
       try {
         const me = await authService.me();
-        if (mounted) setUser(me);
+        if (mounted) {
+          setUser(me);
+          storage.setUser(me);
+        }
       } catch {
         storage.clearToken();
+        storage.clearUser();
         if (mounted) setToken(null);
       } finally {
         if (mounted) setLoading(false);
@@ -41,12 +50,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     const { token: tkn, user: usr } = await authService.login(email, password);
     storage.setToken(tkn);
+    storage.setUser(usr);
     setToken(tkn);
     setUser(usr);
   };
 
   const logout = () => {
     storage.clearToken();
+    storage.clearUser();
     setToken(null);
     setUser(null);
   };

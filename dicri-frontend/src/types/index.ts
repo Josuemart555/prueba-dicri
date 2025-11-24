@@ -1,6 +1,6 @@
 export type Permiso = {
-  permisoId: number;
-  nombre: string;
+  PermisoId: number;
+  Nombre: string;
 };
 
 export type Rol = {
@@ -15,24 +15,26 @@ export type Usuario = {
   email: string;
   activo: boolean;
   fechaCreacion?: string;
-  roles?: Rol[];
+  roles?: Array<Rol | string>;
+  // Cuando el backend devuelve permisos directos en el login
+  permissions?: string[];
 };
 
 export type Expediente = {
   id?: number;
-  numero: string;
-  descripcion?: string;
-  fechaRegistro: string;
-  estado?: 'REGISTRADO' | 'EN_REVISION' | 'APROBADO' | 'RECHAZADO';
+  Numero: string;
+  Descripcion?: string;
+  FechaRegistro: string;
+  Estado?: 'REGISTRADO' | 'EN_REVISION' | 'APROBADO' | 'RECHAZADO';
 };
 
 export type Indicio = {
   id?: number;
-  expedienteId: number;
-  objeto?: string;
-  descripcion: string;
-  color?: string;
-  tamano?: string;
-  peso?: number;
-  ubicacion?: string;
+  ExpedienteId: number;
+  Objeto?: string;
+  Descripcion: string;
+  Color?: string;
+  Tamano?: string;
+  Peso?: number;
+  Ubicacion?: string;
 };

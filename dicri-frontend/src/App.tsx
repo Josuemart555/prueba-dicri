@@ -2,7 +2,7 @@ import { Route, Routes, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ExpedientesPage from './pages/ExpedientesPage';
-import IndiciosPage from './pages/IndiciosPage';
+import ExpedienteIndiciosPage from './pages/ExpedienteIndiciosPage';
 import ReportesPage from './pages/ReportesPage';
 import PermisosPage from './pages/PermisosPage';
 import RolesPage from './pages/RolesPage';
@@ -25,7 +25,7 @@ function App() {
       >
         <Route index element={<DashboardPage />} />
         <Route path="expedientes" element={<ExpedientesPage />} />
-        <Route path="indicios" element={<IndiciosPage />} />
+        <Route path="expedientes/:id/indicios" element={<ExpedienteIndiciosPage />} />
         <Route path="reportes" element={<ReportesPage />} />
         <Route path="permisos" element={<PermisosPage />} />
         <Route path="roles" element={<RolesPage />} />

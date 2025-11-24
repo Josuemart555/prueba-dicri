@@ -1,4 +1,5 @@
-import {FormEvent, useEffect, useState} from 'react';
+import type {FormEvent} from 'react';
+import {useEffect, useState} from 'react';
 import {usuariosService} from '../services/usuariosService';
 import {rolesService} from '../services/rolesService';
 import type {Rol, Usuario} from '../types';
@@ -87,16 +88,6 @@ export default function UsuariosPage() {
         await refreshSelected(id);
     };
 
-    const onUpdateGeneral = () => {
-        if (!selected) return;
-        setEditForm({
-            nombre: (selected as any).nombre ?? (selected as any).Nombre ?? '',
-            email: (selected as any).email ?? (selected as any).Email ?? '',
-            activo: !!(((selected as any).activo ?? (selected as any).Activo) ?? false),
-        });
-        setEditing(true);
-    };
-
     const startEdit = async (u: Usuario) => {
         const id = getUserId(u);
         if (!id) {
@@ -125,24 +116,6 @@ export default function UsuariosPage() {
         } catch (e: any) {
             setError(e.message);
         }
-    };
-
-    const onDelete = async () => {
-        const id = getUserId(selected);
-        if (!selected || !id) return;
-        if (!confirm('¿Eliminar usuario?')) return;
-        await usuariosService.remove(id);
-        await load();
-        setSelected(null);
-    };
-
-    const onUpdatePassword = async () => {
-        const id = getUserId(selected);
-        if (!selected || !id) return;
-        const pwd = prompt('Nueva contraseña');
-        if (!pwd) return;
-        await usuariosService.updatePassword(id, pwd);
-        alert('Contraseña actualizada');
     };
 
     useEffect(() => {
